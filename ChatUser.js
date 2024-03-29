@@ -64,26 +64,69 @@ class ChatUser {
     });
   }
 
+  /**Sends request to joke API, sends back joke as server to the user only */
 
   async handleJoke() {
-    console.log(this.room.members);
-    // const sender =
     const resp = await fetch(`${JOKE_BASE_URL}/`,
       {
         headers: { "Accept": "application/json" }
       });
     const data = await resp.json();
+
     this.send(JSON.stringify(
       {
-        name: "Server",
         type: "chat",
-        text: data.joke
+        text: data.joke,
+        name: "Server",
       }
     ));
   }
 
+  /**Retrieves each member's name and sends back a message to the user only
+   * message "In room: <memberName>, ..."
+   */
+
   getMembers() {
-    this.send("abc");
+    const members = [];
+    this.room.members.forEach(m => members.push(m.name));
+
+    this.send(JSON.stringify(
+      {
+        type: "chat",
+        text: "In room: " + members.join(", "),
+        name: "Server",
+      }
+    ));
+  }
+
+  /**Given message text and recipient, send private message to just that
+   * recipient user
+   */
+
+  sendPrivMsg(msg, recipient) {
+    let recipientUser;
+
+    for (const member of this.room.members) {
+      if(member.name === recipient) {
+        recipientUser = member;
+      }
+    }
+
+    recipientUser.send(JSON.stringify(
+      {
+        type: "chat",
+        text: msg,
+        name: `(private) ${this.name}`,
+      }
+    ))
+
+    this.send(JSON.stringify(
+      {
+        type: "chat",
+        text: msg,
+        name: `(private) you`,
+      }
+    ))
   }
 
   /** Handle messages from client:
@@ -102,6 +145,9 @@ class ChatUser {
     else if (msg.type === "chat") this.handleChat(msg.text);
     else if (msg.type === "get-joke") this.handleJoke();
     else if (msg.type === "get-members") this.getMembers();
+    else if (msg.type === "send-priv-msg") {
+      this.sendPrivMsg(msg.text, msg.recipient);
+    }
 
     else throw new Error(`bad message: ${msg.type}`);
   }

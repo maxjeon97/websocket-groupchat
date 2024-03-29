@@ -32,15 +32,6 @@ ws.onmessage = function (evt) {
 
   if (msg.type === "note") {
     $item.innerHTML = `<i>${msg.text}</i>`;
-  } else if (msg.text === "/joke") {
-    ws.send(JSON.stringify({
-      type: "get-joke",
-      name: msg.name
-    }));
-  } else if (msg.text === "/members") {
-    ws.send(JSON.stringify({
-      type: "get-members"
-    }));
   } else if (msg.type === "chat") {
     $item.innerHTML = `<b>${msg.name}: </b>${msg.text}`;
   } else {
@@ -65,13 +56,51 @@ ws.onclose = function (evt) {
   console.log("close", evt);
 };
 
+/**Given message content, formats the message into an object with key
+ * type
+ *
+ * Returns { type }
+ */
+
+function formatMsg(input) {
+  let type;
+  let text;
+  let recipient;
+
+  if(input === "/joke") {
+    type = "get-joke";
+    text = "";
+  }
+
+  else if(input === "/members") {
+    type = "get-members";
+    text = "";
+  }
+
+  else if(input.startsWith("/priv")) {
+    const splitInput = input.split(" ");
+    type = "send-priv-msg";
+    text = splitInput.slice(2).join(" ");
+    recipient = splitInput[1];
+  }
+
+  else {
+    type = "chat";
+    text = input;
+    recipient = "";
+  }
+
+  return { type, text, recipient };
+}
 
 /** send message when button pushed. */
 
 function sendMessage(evt) {
   evt.preventDefault();
 
-  let data = { type: "chat", text: document.querySelector("#m").value };
+  const input = document.querySelector("#m").value;
+
+  const data = formatMsg(input);
   ws.send(JSON.stringify(data));
 
   document.querySelector("#m").value = "";
