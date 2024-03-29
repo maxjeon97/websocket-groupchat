@@ -1,9 +1,11 @@
 "use strict";
 
+const { json } = require("express");
 /** Functionality related to chatting. */
 
 // Room is an abstraction of a chat channel
 const Room = require("./Room");
+const JOKE_BASE_URL = "https://icanhazdadjoke.com/";
 
 /** ChatUser is a individual connection from client -> server to chat. */
 
@@ -62,6 +64,18 @@ class ChatUser {
     });
   }
 
+
+  async handleJoke() {
+    const resp = await fetch(`${JOKE_BASE_URL}/`);
+    const data = await resp.json();
+    console.log(data);
+    this.room.broadcast({
+      name: "Server",
+      type: "chat",
+      text: data.joke
+    });
+  }
+
   /** Handle messages from client:
    *
    * @param jsonData {string} raw message data
@@ -74,9 +88,11 @@ class ChatUser {
 
   handleMessage(jsonData) {
     let msg = JSON.parse(jsonData);
-
     if (msg.type === "join") this.handleJoin(msg.name);
     else if (msg.type === "chat") this.handleChat(msg.text);
+    else if (msg.type === "get-joke") {
+      this.handleJoke();
+    }
     else throw new Error(`bad message: ${msg.type}`);
   }
 

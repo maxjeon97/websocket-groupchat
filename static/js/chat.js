@@ -24,17 +24,22 @@ ws.onopen = function (evt) {
 
 ws.onmessage = function (evt) {
   console.log("message", evt);
-
   let msg = JSON.parse(evt.data);
   let $item = document.createElement("li");
 
+
   if (msg.type === "note") {
     $item.innerHTML = `<i>${msg.text}</i>`;
+  } else if (msg.text === "/joke") {
+    ws.send(JSON.stringify({
+      type: "get-joke"
+    }));
   } else if (msg.type === "chat") {
     $item.innerHTML = `<b>${msg.name}: </b>${msg.text}`;
   } else {
     return console.error(`bad message: ${msg}`);
   }
+
 
   document.querySelector("#messages").appendChild($item);
 };
