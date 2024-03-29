@@ -66,14 +66,24 @@ class ChatUser {
 
 
   async handleJoke() {
-    const resp = await fetch(`${JOKE_BASE_URL}/`);
+    console.log(this.room.members);
+    // const sender =
+    const resp = await fetch(`${JOKE_BASE_URL}/`,
+      {
+        headers: { "Accept": "application/json" }
+      });
     const data = await resp.json();
-    console.log(data);
-    this.room.broadcast({
-      name: "Server",
-      type: "chat",
-      text: data.joke
-    });
+    this.send(JSON.stringify(
+      {
+        name: "Server",
+        type: "chat",
+        text: data.joke
+      }
+    ));
+  }
+
+  getMembers() {
+    this.send("abc");
   }
 
   /** Handle messages from client:
@@ -90,9 +100,9 @@ class ChatUser {
     let msg = JSON.parse(jsonData);
     if (msg.type === "join") this.handleJoin(msg.name);
     else if (msg.type === "chat") this.handleChat(msg.text);
-    else if (msg.type === "get-joke") {
-      this.handleJoke();
-    }
+    else if (msg.type === "get-joke") this.handleJoke();
+    else if (msg.type === "get-members") this.getMembers();
+
     else throw new Error(`bad message: ${msg.type}`);
   }
 
