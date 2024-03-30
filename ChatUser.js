@@ -129,6 +129,19 @@ class ChatUser {
     ))
   }
 
+  /**Given a new name, update the user's username to the input; Broadcast this
+   * change to the room the user is in
+   */
+
+  changeUsername(name) {
+    const originalName = this.name;
+    this.name = name;
+    this.room.broadcast({
+      type: "note",
+      text: `${originalName} changed their name to ${this.name}!`,
+    });
+  }
+
   /** Handle messages from client:
    *
    * @param jsonData {string} raw message data
@@ -148,6 +161,7 @@ class ChatUser {
     else if (msg.type === "send-priv-msg") {
       this.sendPrivMsg(msg.text, msg.recipient);
     }
+    else if (msg.type === "change-username") this.changeUsername(msg.text);
 
     else throw new Error(`bad message: ${msg.type}`);
   }

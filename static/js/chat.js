@@ -84,6 +84,12 @@ function formatMsg(input) {
     recipient = splitInput[1];
   }
 
+  else if(input.startsWith("/name")) {
+    const splitInput = input.split(" ");
+    type = "change-username";
+    text = splitInput[1];
+  }
+
   else {
     type = "chat";
     text = input;
